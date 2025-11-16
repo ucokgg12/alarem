@@ -114,6 +114,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" ></path>
               </svg>
             </button>
+            <span id="copy-curl-feedback" class="absolute top-2 right-2 p-2 text-white text-xs" style="display: none;">Copied!</span>
           </div>
           <p class="text-xs text-gray-500 text-center">
             Remember to replace `YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE` with
@@ -139,7 +140,7 @@
 
         const VAPID_KEY =
           "BO9A8Xc08GPOfQJOUSco5bLuPoG8WYrVxhy6MgpVUbqyFM57-mY_jFFoZytUxUM4WVeoqVrz-EQIyWSr_HAjKXE";
-        const SERVER_KEY = "YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE";
+        const SERVER_KEY = "qj2D1p-Xtwg6umbRw1oVKtyr3H1eXqU2k4DV1lQAQiw";
 
         // --- STATE & DOM ELEMENTS ---
         let fcmToken = null;
@@ -160,6 +161,7 @@
         const bodyInput = document.getElementById("body-input");
         const curlCommandEl = document.getElementById("curl-command");
         const copyCurlBtn = document.getElementById("copy-curl-btn");
+        const copyCurlFeedback = document.getElementById("copy-curl-feedback");
 
         // --- FIREBASE INITIALIZATION ---
         firebase.initializeApp(firebaseConfig);
@@ -268,7 +270,12 @@
         copyCurlBtn.addEventListener("click", () => {
           if (curlCommandEl.textContent) {
             navigator.clipboard.writeText(curlCommandEl.textContent);
-            alert("cURL command copied to clipboard!");
+            copyCurlBtn.style.display = "none";
+            copyCurlFeedback.style.display = "inline";
+            setTimeout(() => {
+              copyCurlBtn.style.display = "inline";
+              copyCurlFeedback.style.display = "none";
+            }, 2000);
           }
         });
 
