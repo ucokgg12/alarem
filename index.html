@@ -99,37 +99,17 @@
         
         <div id="test-section" style="display: none" class="space-y-6">
           <div class="bg-gray-700 p-4 rounded-lg space-y-4">
-            <h2 class="font-semibold text-lg mb-2 text-center text-white">
-              4. Send Test Notification (From Browser)
-            </h2>
-
-            <div class="bg-red-900/50 border border-red-700 text-red-300 p-3 rounded-lg text-sm">
-                <p>
-                    <strong>⚠️ Security Warning:</strong> This is for testing only.
-                    Never expose your server key in client-side code in a production
-                    application.
-                </p>
-            </div>
-
-            <div>
-              <label for="server-key-input" class="block text-sm font-medium text-gray-300 mb-1">Firebase Server Key</label>
-              <input type="password" id="server-key-input" placeholder="Paste your Server Key from Firebase Console" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" />
-            </div>
-
-            <button id="send-notification-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed">
-              Send Test Notification
-            </button>
-             <p id="send-feedback" class="text-center text-sm mt-2"></p>
-          </div>
-
-          <div class="bg-gray-700 p-4 rounded-lg space-y-4">
              <h2 class="font-semibold text-lg mb-2 text-center text-white">
-              5. Send Test Notification (From Terminal)
+              4. Send Test Notification
             </h2>
             <div class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 p-3 rounded-lg text-sm">
               <p>
-                Alternatively, run this `curl` command from your terminal to simulate a secure server request.
+                <strong>Important:</strong> For security, push notifications must be sent from a secure server, not a browser. To test, paste your <strong>Firebase Server Key</strong> below, then copy the generated command and run it in your computer's terminal.
               </p>
+            </div>
+            <div>
+              <label for="server-key-input" class="block text-sm font-medium text-gray-300 mb-1">Firebase Server Key</label>
+              <input type="password" id="server-key-input" placeholder="Paste key to auto-fill the command below" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" />
             </div>
             <div class="relative bg-gray-900 p-3 rounded-md">
               <h3 class="text-md font-semibold mb-2 text-gray-300">
@@ -143,11 +123,6 @@
               </button>
               <span id="copy-curl-feedback" class="absolute top-2 right-2 p-2 text-white text-xs" style="display: none;">Copied!</span>
             </div>
-            <p class="text-xs text-gray-500 text-center">
-              Remember to replace `YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE` with
-              your actual Server Key from Firebase Project Settings &gt; Cloud
-              Messaging.
-            </p>
           </div>
         </div>
 
@@ -191,13 +166,10 @@
         const bodyInput = document.getElementById("body-input");
 
         const testSectionEl = document.getElementById("test-section");
+        const serverKeyInput = document.getElementById("server-key-input");
         const curlCommandEl = document.getElementById("curl-command");
         const copyCurlBtn = document.getElementById("copy-curl-btn");
         const copyCurlFeedback = document.getElementById("copy-curl-feedback");
-        
-        const serverKeyInput = document.getElementById("server-key-input");
-        const sendNotificationBtn = document.getElementById("send-notification-btn");
-        const sendFeedbackEl = document.getElementById("send-feedback");
 
         // --- FIREBASE INITIALIZATION ---
         firebase.initializeApp(firebaseConfig);
@@ -233,7 +205,8 @@
 
         const updateCurlCommand = () => {
           if (!fcmToken) return;
-          const command = `curl -X POST -H "Authorization: key=YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE" -H "Content-Type: application/json" -d '{
+          const serverKey = serverKeyInput.value || "YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE";
+          const command = `curl -X POST -H "Authorization: key=${serverKey}" -H "Content-Type: application/json" -d '{
   "to": "${fcmToken}",
   "notification": {
     "title": "${notificationTitle}",
@@ -287,64 +260,10 @@
             showPermissionState("denied", `Error: ${error.message}`);
           }
         };
-        
-        const sendNotificationFromBrowser = async () => {
-          const serverKey = serverKeyInput.value;
-          if (!serverKey) {
-              sendFeedbackEl.textContent = "Please provide your Firebase Server Key.";
-              sendFeedbackEl.className = "text-center text-sm mt-2 text-red-400";
-              return;
-          }
-          if (!fcmToken) {
-              sendFeedbackEl.textContent = "FCM Token not found. Please grant permission first.";
-              sendFeedbackEl.className = "text-center text-sm mt-2 text-red-400";
-              return;
-          }
-
-          sendNotificationBtn.disabled = true;
-          sendNotificationBtn.textContent = "Sending...";
-          sendFeedbackEl.textContent = "";
-
-          try {
-            const response = await fetch("https://fcm.googleapis.com/fcm/send", {
-                method: "POST",
-                headers: {
-                    "Authorization": `key=${serverKey}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    to: fcmToken,
-                    notification: {
-                        title: notificationTitle,
-                        body: notificationBody,
-                    },
-                }),
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`FCM server error (${response.status}): ${JSON.stringify(errorData.error)}`);
-            }
-
-            const result = await response.json();
-            console.log("FCM send result:", result);
-            sendFeedbackEl.textContent = "Notification sent successfully!";
-            sendFeedbackEl.className = "text-center text-sm mt-2 text-green-400";
-
-          } catch(error) {
-              console.error("Error sending notification:", error);
-              sendFeedbackEl.textContent = `Failed to send notification: ${error.message}`;
-              sendFeedbackEl.className = "text-center text-sm mt-2 text-red-400";
-          } finally {
-              sendNotificationBtn.disabled = false;
-              sendNotificationBtn.textContent = "Send Test Notification";
-          }
-        }
-
 
         // --- EVENT LISTENERS ---
         requestPermissionBtn.addEventListener("click", getFCMToken);
-        sendNotificationBtn.addEventListener("click", sendNotificationFromBrowser);
+        serverKeyInput.addEventListener("input", updateCurlCommand);
 
         copyTokenBtn.addEventListener("click", () => {
           if (fcmToken) {
