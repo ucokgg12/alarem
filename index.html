@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF--ar" />
+    <link rel="icon" href="https://picsum.photos/32" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>PWA Push Notification Sender</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+  </head>
+  <body class="bg-gray-900 text-white">
+    <div
+      class="min-h-screen bg-gray-900 text-gray-200 flex flex-col items-center p-4 sm:p-6 md:p-8 font-sans"
+    >
+      <div
+        class="w-full max-w-2xl mx-auto bg-gray-800 shadow-2xl rounded-2xl p-6 md:p-8 space-y-6"
+      >
+        <header class="text-center">
+          <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">
+            PWA Push Notification Sender
+          </h1>
+          <p class="text-gray-400 mt-2">
+            Get your FCM token and test push notifications.
+          </p>
+        </header>
+
+        <div class="bg-gray-700 p-4 rounded-lg text-center">
+          <h2 class="font-semibold text-lg mb-2 text-white">
+            1. Notification Permission
+          </h2>
+          <div id="permission-loading">
+            <p class="text-yellow-400">Checking permission...</p>
+          </div>
+          <div id="permission-granted" style="display: none">
+            <p class="text-green-400">
+              Permission Granted! You can receive notifications.
+            </p>
+          </div>
+          <div id="permission-denied" style="display: none">
+            <p class="text-red-400 mb-4">
+              Permission Denied. Please enable notifications in your browser
+              settings.
+            </p>
+            <button
+              id="request-permission-btn"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mx-auto transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                ></path>
+              </svg>
+              <span class="ml-2">Request Permission</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="token-section" style="display: none" class="bg-gray-700 p-4 rounded-lg">
+          <h2 class="font-semibold text-lg mb-3 text-center text-white">
+            2. Your FCM Device Token
+          </h2>
+          <div class="relative bg-gray-900 p-3 rounded-md">
+            <p id="token-display" class="text-cyan-300 break-all text-sm font-mono"></p>
+            <button id="copy-token-btn" class="absolute top-2 right-2 p-2 text-gray-400 hover:text-white transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" ></path>
+              </svg>
+            </button>
+            <span id="copy-token-feedback" class="absolute top-2 right-2 p-2 text-white text-xs" style="display: none;">Copied!</span>
+          </div>
+        </div>
+
+        <div id="curl-section" style="display: none" class="bg-gray-700 p-4 rounded-lg space-y-4">
+          <h2 class="font-semibold text-lg mb-2 text-center text-white">
+            3. Customize & Send Notification
+          </h2>
+          <div>
+            <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Notification Title</label>
+            <input type="text" id="title-input" value="Hello from PWA!" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" />
+          </div>
+          <div>
+            <label for="body" class="block text-sm font-medium text-gray-300 mb-1">Notification Body</label>
+            <input type="text" id="body-input" value="This is a test notification." class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" />
+          </div>
+
+          <div class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 p-3 rounded-lg text-sm">
+            <p>
+              <strong>Important:</strong> Sending push notifications requires a
+              secure server. This app provides a `curl` command for you to
+              simulate this server request from your terminal.
+            </p>
+          </div>
+
+          <div class="relative bg-gray-900 p-3 rounded-md">
+            <h3 class="text-md font-semibold mb-2 text-gray-300">
+              Run this command in your Terminal:
+            </h3>
+            <code id="curl-command" class="text-cyan-300 break-all text-xs font-mono whitespace-pre-wrap"></code>
+            <button id="copy-curl-btn" class="absolute top-2 right-2 p-2 text-gray-400 hover:text-white transition-colors" title="Copy command" >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" ></path>
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 text-center">
+            Remember to replace `YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE` with
+            your actual Server Key from Firebase Project Settings &gt; Cloud
+            Messaging.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- CONFIGURATION ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyBTITgeHnkkL6wJVMq4OE_LHJMDuA8_3ho",
+          authDomain: "ssss-f0f3c.firebaseapp.com",
+          projectId: "ssss-f0f3c",
+          storageBucket: "ssss-f0f3c.firebasestorage.app",
+          messagingSenderId: "216606777782",
+          appId: "1:216606777782:web:d12657df0c63e46c53a117",
+          measurementId: "G-PFF7HFMM7C",
+        };
+        // IMPORTANT: You need to generate this key in your Firebase project console
+        // Project settings > Cloud Messaging > Web configuration > Generate key pair
+        const VAPID_KEY = "YOUR_VAPID_KEY_FROM_FIREBASE_CONSOLE";
+        const SERVER_KEY = "YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE";
+
+        // --- STATE & DOM ELEMENTS ---
+        let fcmToken = null;
+        let notificationTitle = "Hello from PWA!";
+        let notificationBody = "This is a test notification.";
+
+        const permissionLoadingEl = document.getElementById("permission-loading");
+        const permissionGrantedEl = document.getElementById("permission-granted");
+        const permissionDeniedEl = document.getElementById("permission-denied");
+        const requestPermissionBtn = document.getElementById("request-permission-btn");
+        const tokenSectionEl = document.getElementById("token-section");
+        const tokenDisplayEl = document.getElementById("token-display");
+        const copyTokenBtn = document.getElementById("copy-token-btn");
+        const copyTokenFeedback = document.getElementById("copy-token-feedback");
+        const curlSectionEl = document.getElementById("curl-section");
+        const titleInput = document.getElementById("title-input");
+        const bodyInput = document.getElementById("body-input");
+        const curlCommandEl = document.getElementById("curl-command");
+        const copyCurlBtn = document.getElementById("copy-curl-btn");
+
+        // --- FIREBASE INITIALIZATION ---
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+
+        // --- FUNCTIONS ---
+        const updateCurlCommand = () => {
+          const command = `curl -X POST -H "Authorization: key=${SERVER_KEY}" -H "Content-Type: application/json" -d '{
+  "to": "${fcmToken}",
+  "notification": {
+    "title": "${notificationTitle}",
+    "body": "${notificationBody}"
+  }
+}' "https://fcm.googleapis.com/fcm/send"`;
+          curlCommandEl.textContent = command;
+        };
+
+        const getFCMToken = async () => {
+          try {
+            permissionLoadingEl.style.display = "block";
+            permissionGrantedEl.style.display = "none";
+            permissionDeniedEl.style.display = "none";
+
+            const permission = await Notification.requestPermission();
+
+            if (permission === "granted") {
+              console.log("Notification permission granted.");
+              permissionGrantedEl.style.display = "block";
+              
+              const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+              const token = await messaging.getToken({ 
+                  vapidKey: VAPID_KEY,
+                  serviceWorkerRegistration: registration,
+              });
+
+              if (token) {
+                  fcmToken = token;
+                  tokenDisplayEl.textContent = token;
+                  tokenSectionEl.style.display = "block";
+                  curlSectionEl.style.display = "block";
+                  updateCurlCommand();
+              } else {
+                  console.log("No registration token available. Request permission to generate one.");
+                  permissionDeniedEl.style.display = "block";
+              }
+
+            } else {
+              console.log("Unable to get permission to notify.");
+              permissionDeniedEl.style.display = "block";
+            }
+          } catch (error) {
+            console.error("An error occurred while retrieving token. ", error);
+            permissionDeniedEl.style.display = "block";
+          } finally {
+            permissionLoadingEl.style.display = "none";
+          }
+        };
+
+        // --- EVENT LISTENERS ---
+        requestPermissionBtn.addEventListener("click", getFCMToken);
+
+        copyTokenBtn.addEventListener("click", () => {
+          if (fcmToken) {
+            navigator.clipboard.writeText(fcmToken);
+            copyTokenBtn.style.display = 'none';
+            copyTokenFeedback.style.display = 'inline';
+            setTimeout(() => {
+                copyTokenBtn.style.display = 'inline';
+                copyTokenFeedback.style.display = 'none';
+            }, 2000);
+          }
+        });
+
+        titleInput.addEventListener("input", (e) => {
+          notificationTitle = e.target.value;
+          updateCurlCommand();
+        });
+
+        bodyInput.addEventListener("input", (e) => {
+          notificationBody = e.target.value;
+          updateCurlCommand();
+        });
+
+        copyCurlBtn.addEventListener("click", () => {
+          navigator.clipboard.writeText(curlCommandEl.textContent);
+          alert('cURL command copied to clipboard!');
+        });
+        
+        // Listen for foreground messages
+        messaging.onMessage((payload) => {
+           console.log("Message received. ", payload);
+           alert(`Foreground Notification Received: ${payload.notification.title}\n${payload.notification.body}`);
+        });
+
+        // --- INITIALIZATION ON LOAD ---
+        getFCMToken();
+      });
+    </script>
+  </body>
+</html>

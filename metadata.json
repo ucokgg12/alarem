@@ -1,0 +1,5 @@
+{
+  "name": "PWA Push Notification Sender",
+  "description": "A simple Progressive Web App to demonstrate sending push notifications to an Android device using Firebase Cloud Messaging. It helps you get your device token and provides a command to test sending a notification.",
+  "requestFramePermissions": []
+}
