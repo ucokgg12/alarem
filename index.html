@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#111827" />
     <title>PWA Push Notification Sender</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
@@ -188,7 +188,7 @@
               console.log("Notification permission granted.");
               permissionGrantedEl.style.display = "block";
               
-              const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+              const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
               const token = await messaging.getToken({ 
                   vapidKey: VAPID_KEY,
                   serviceWorkerRegistration: registration,
