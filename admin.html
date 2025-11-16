@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+</head>
+<body>
+
+<h2>Admin Panel</h2>
+
+<button onclick="sendNotif()">🔔 Kirim Notifikasi ke Semua User</button>
+
+<script>
+function sendNotif() {
+    fetch("https://your-server.com/broadcast", {
+        method: "POST"
+    })
+    .then(r => r.text())
+    .then(t => alert("Notifikasi terkirim ke semua user!"));
+}
+</script>
+
+</body>
+</html>

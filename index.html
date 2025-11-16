@@ -1,102 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="https://picsum.photos/32" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#111827" />
-    <title>PWA Push Notification Sender</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>FCM Client</title>
+</head>
+<body>
 
-    <!-- IMPORTANT: manifest di root -->
-    <link rel="manifest" href="manifest.json" />
+<h2>App User</h2>
+<p id="token_output">Mengambil token...</p>
 
-    <!-- Firebase SDK compat -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
 
-    <style>
-      .tab-active { border-bottom: 2px solid #22d3ee; color: white; }
-      .tab-inactive { color: #9ca3af; }
-    </style>
-  </head>
-  <body class="bg-gray-900 text-white">
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBTITgeHnkkL6wJVMq4OE_LHJMDuA8_3ho",
+  authDomain: "ssss-f0f3c.firebaseapp.com",
+  projectId: "ssss-f0f3c",
+  storageBucket: "ssss-f0f3c.firebasestorage.app",
+  messagingSenderId: "216606777782",
+  appId: "1:216606777782:web:d12657df0c63e46c53a117",
+  measurementId: "G-PFF7HFMM7C"
+};
 
-    <!-- UI kamu tetap sama → dipotong biar singkat -->
-    <!-- ............................... -->
-    <!-- ............................... -->
-    <!-- UI tidak saya ubah -->
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
+async function getTokenFCM() {
+    await Notification.requestPermission();
+    const token = await messaging.getToken({
+        vapidKey: "BK8..." // <-- masukkan VAPID KEY kamu disini
+    });
 
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyBTITgeHnkkL6wJVMq4OE_LHJMDuA8_3ho",
-          authDomain: "ssss-f0f3c.firebaseapp.com",
-          projectId: "ssss-f0f3c",
-          storageBucket: "ssss-f0f3c.firebasestorage.app",
-          messagingSenderId: "216606777782",
-          appId: "1:216606777782:web:d12657df0c63e46c53a117",
-          measurementId: "G-PFF7HFMM7C",
-        };
+    document.getElementById("token_output").textContent = token;
 
-        const VAPID_KEY =
-          "BO9A8Xc08GPOfQJOUSco5bLuPoG8WYrVxhy6MgpVUbqyFM57-mY_jFFoZytUxUM4WVeoqVrz-EQIyWSr_HAjKXE";
-        const SERVER_KEY = "qj2D1p-Xtwg6umbRw1oVKtyr3H1eXqU2k4DV1lQAQiw";
+    // simpan token ke server API kamu
+    await fetch("https://your-server.com/save-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+    });
+}
 
-        
-        firebase.initializeApp(firebaseConfig);
-        const messaging = firebase.messaging();
+getTokenFCM();
+</script>
 
-        // === FUNGSI GET TOKEN ===
-        const getFCMToken = async () => {
-          try {
-            const permission = await Notification.requestPermission();
-            if (permission !== "granted") return;
-
-            // REGISTER SERVICE WORKER HARUS DI ROOT
-            const registration = await navigator.serviceWorker.register(
-              "./firebase-messaging-sw.js"
-            );
-
-            const token = await messaging.getToken({
-              vapidKey: VAPID_KEY,
-              serviceWorkerRegistration: registration,
-            });
-
-            console.log("TOKEN:", token);
-            document.getElementById("token-display").textContent = token;
-
-          } catch (err) {
-            console.error("TOKEN ERROR:", err);
-          }
-        };
-
-        // RUN saat load
-        if (Notification.permission === "granted") getFCMToken();
-
-        // tombol jika denied
-        document.getElementById("request-permission-btn")
-          ?.addEventListener("click", getFCMToken);
-
-
-        // === ON MESSAGE (Foreground) ===
-        messaging.onMessage((payload) => {
-          console.log("Foreground message:", payload);
-
-          const el = document.createElement("div");
-          el.className = "fixed top-5 right-5 bg-gray-700 p-4 rounded-lg shadow-lg border border-cyan-500";
-          el.innerHTML = `
-            <h4 class="font-bold">${payload.notification.title}</h4>
-            <p>${payload.notification.body}</p>
-          `;
-          document.body.appendChild(el);
-          setTimeout(() => el.remove(), 5000);
-        });
-
-      });
-    </script>
-  </body>
+</body>
 </html>
