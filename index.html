@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#111827" />
     <title>PWA Push Notification Sender</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="./manifest.json" />
+    <link rel="manifest" href="./public/manifest.json" />
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
@@ -136,19 +136,9 @@
           appId: "1:216606777782:web:d12657df0c63e46c53a117",
           measurementId: "G-PFF7HFMM7C",
         };
-        
-        // =======================================================================
-        //  !!! IMPORTANT ACTION REQUIRED !!!
-        // =======================================================================
-        // 1. Go to your Firebase project console.
-        // 2. Go to Project Settings (gear icon) > Cloud Messaging tab.
-        // 3. Under "Web configuration", find "Web Push certificates".
-        // 4. Click "Generate key pair".
-        // 5. Copy the generated key and PASTE IT BELOW, replacing the placeholder.
-        // =======================================================================
-        const VAPID_KEY = "BO9A8Xc08GPOfQJOUSco5bLuPoG8WYrVxhy6MgpVUbqyFM57-mY_jFFoZytUxUM4WVeoqVrz-EQIyWSr_HAjKXE";
-        
-        // This is your legacy server key, also found in Cloud Messaging settings.
+
+        const VAPID_KEY =
+          "BO9A8Xc08GPOfQJOUSco5bLuPoG8WYrVxhy6MgpVUbqyFM57-mY_jFFoZytUxUM4WVeoqVrz-EQIyWSr_HAjKXE";
         const SERVER_KEY = "YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE";
 
         // --- STATE & DOM ELEMENTS ---
@@ -159,7 +149,7 @@
         const permissionLoadingEl = document.getElementById("permission-loading");
         const permissionGrantedEl = document.getElementById("permission-granted");
         const permissionDeniedEl = document.getElementById("permission-denied");
-        const permissionDeniedText = permissionDeniedEl.querySelector('p');
+        const permissionDeniedText = permissionDeniedEl.querySelector("p");
         const requestPermissionBtn = document.getElementById("request-permission-btn");
         const tokenSectionEl = document.getElementById("token-section");
         const tokenDisplayEl = document.getElementById("token-display");
@@ -176,20 +166,20 @@
         const messaging = firebase.messaging();
 
         // --- FUNCTIONS ---
-        
-        // Helper to manage the visibility of permission UI elements
-        const showPermissionState = (state, message = '') => {
-            permissionLoadingEl.style.display = 'none';
-            permissionGrantedEl.style.display = state === 'granted' ? 'block' : 'none';
-            permissionDeniedEl.style.display = state === 'denied' ? 'block' : 'none';
-            tokenSectionEl.style.display = 'none';
-            curlSectionEl.style.display = 'none';
+        const showPermissionState = (state, message = "") => {
+          permissionLoadingEl.style.display = "none";
+          permissionGrantedEl.style.display = state === "granted" ? "block" : "none";
+          permissionDeniedEl.style.display =
+            state === "denied" || state === "default" ? "block" : "none";
+          tokenSectionEl.style.display = "none";
+          curlSectionEl.style.display = "none";
 
-            if (state === 'denied' && message) {
-                permissionDeniedText.textContent = message;
-            } else if (state === 'denied') {
-                permissionDeniedText.textContent = 'Permission Denied. Please enable notifications in your browser settings.';
-            }
+          if ((state === "denied" || state === "default") && message) {
+            permissionDeniedText.textContent = message;
+          } else if (state === "denied" || state === "default") {
+            permissionDeniedText.textContent =
+              "Permission Denied. Please enable notifications in your browser settings.";
+          }
         };
 
         const updateCurlCommand = () => {
@@ -206,43 +196,47 @@
 
         const getFCMToken = async () => {
           try {
-            // Check for placeholder key first
             if (VAPID_KEY.includes("YOUR_VAPID_KEY")) {
-                throw new Error("VAPID_KEY is not set. Please update it in index.html.");
+              throw new Error(
+                "VAPID_KEY is not set. Please update it in the script."
+              );
             }
 
             const permission = await Notification.requestPermission();
 
             if (permission === "granted") {
               console.log("Notification permission granted.");
-              showPermissionState('granted');
-              
-              const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-              console.log('Service Worker registered successfully.');
+              showPermissionState("granted");
 
-              const token = await messaging.getToken({ 
-                  vapidKey: VAPID_KEY,
-                  serviceWorkerRegistration: registration,
+              const registration = await navigator.serviceWorker.register(
+                "./public/firebase-messaging-sw.js"
+              );
+              console.log("Service Worker registered successfully.");
+
+              const token = await messaging.getToken({
+                vapidKey: VAPID_KEY,
+                serviceWorkerRegistration: registration,
               });
 
               if (token) {
-                  fcmToken = token;
-                  tokenDisplayEl.textContent = token;
-                  tokenSectionEl.style.display = "block";
-                  curlSectionEl.style.display = "block";
-                  updateCurlCommand();
-                  console.log("FCM Token retrieved:", token);
+                fcmToken = token;
+                tokenDisplayEl.textContent = token;
+                tokenSectionEl.style.display = "block";
+                curlSectionEl.style.display = "block";
+                updateCurlCommand();
+                console.log("FCM Token retrieved:", token);
               } else {
-                  throw new Error("Failed to get FCM token. This can happen if the VAPID key is incorrect or the service worker path is wrong.");
+                throw new Error(
+                  "Failed to get FCM token. This can happen if the VAPID key is incorrect or the service worker path is wrong."
+                );
               }
-
             } else {
               console.log("Unable to get permission to notify.");
-              showPermissionState('denied');
+              showPermissionState("denied");
             }
           } catch (error) {
             console.error("An error occurred while retrieving token: ", error);
-            showPermissionState('denied', `Error: ${error.message}`);
+            showPermissionState("denied", `Error: ${error.message}`);
           }
         };
 
@@ -252,11 +246,11 @@
         copyTokenBtn.addEventListener("click", () => {
           if (fcmToken) {
             navigator.clipboard.writeText(fcmToken);
-            copyTokenBtn.style.display = 'none';
-            copyTokenFeedback.style.display = 'inline';
+            copyTokenBtn.style.display = "none";
+            copyTokenFeedback.style.display = "inline";
             setTimeout(() => {
-                copyTokenBtn.style.display = 'inline';
-                copyTokenFeedback.style.display = 'none';
+              copyTokenBtn.style.display = "inline";
+              copyTokenFeedback.style.display = "none";
             }, 2000);
           }
         });
@@ -272,23 +266,25 @@
         });
 
         copyCurlBtn.addEventListener("click", () => {
-          navigator.clipboard.writeText(curlCommandEl.textContent);
-          alert('cURL command copied to clipboard!');
+          if (curlCommandEl.textContent) {
+            navigator.clipboard.writeText(curlCommandEl.textContent);
+            alert("cURL command copied to clipboard!");
+          }
         });
-        
+
         // Listen for foreground messages
         messaging.onMessage((payload) => {
-           console.log("Message received. ", payload);
-           alert(`Foreground Notification Received: ${payload.notification.title}\n${payload.notification.body}`);
+          console.log("Message received. ", payload);
+          alert(
+            `Foreground Notification Received: ${payload.notification.title}\n${payload.notification.body}`
+          );
         });
 
         // --- INITIALIZATION ON LOAD ---
-        // We only attempt to get the token if permission was already granted.
-        // Otherwise, we wait for the user to click the button.
-        if (Notification.permission === 'granted') {
-             getFCMToken();
+        if (Notification.permission === "granted") {
+          getFCMToken();
         } else {
-            showPermissionState(Notification.permission);
+          showPermissionState(Notification.permission);
         }
       });
     </script>
