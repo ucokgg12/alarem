@@ -11,6 +11,15 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+    <style>
+      .tab-active {
+        border-bottom: 2px solid #22d3ee;
+        color: white;
+      }
+      .tab-inactive {
+        color: #9ca3af;
+      }
+    </style>
   </head>
   <body class="bg-gray-900 text-white">
     <div
@@ -111,18 +120,45 @@
               <label for="server-key-input" class="block text-sm font-medium text-gray-300 mb-1">Firebase Server Key</label>
               <input type="password" id="server-key-input" placeholder="Paste key to auto-fill the command below" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" />
             </div>
-            <div class="relative bg-gray-900 p-3 rounded-md">
-              <h3 class="text-md font-semibold mb-2 text-gray-300">
-                Run this command in your Terminal:
-              </h3>
-              <code id="curl-command" class="text-cyan-300 break-all text-xs font-mono whitespace-pre-wrap"></code>
-              <button id="copy-curl-btn" class="absolute top-2 right-2 p-2 text-gray-400 hover:text-white transition-colors" title="Copy command" >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" ></path>
-                </svg>
-              </button>
-              <span id="copy-curl-feedback" class="absolute top-2 right-2 p-2 text-white text-xs" style="display: none;">Copied!</span>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-600">
+                <button id="curl-tab-btn" class="px-4 py-2 text-sm sm:text-base tab-active">cURL (Linux/macOS)</button>
+                <button id="powershell-tab-btn" class="px-4 py-2 text-sm sm:text-base tab-inactive">PowerShell (Windows)</button>
             </div>
+
+            <!-- cURL Command -->
+            <div id="curl-command-container">
+                <div class="relative bg-gray-900 p-3 rounded-md rounded-tl-none">
+                <h3 class="text-md font-semibold mb-2 text-gray-300">
+                    Run this command in your Terminal:
+                </h3>
+                <code id="curl-command" class="text-cyan-300 break-all text-xs font-mono whitespace-pre-wrap"></code>
+                <button id="copy-curl-btn" class="absolute top-2 right-2 p-2 text-gray-400 hover:text-white transition-colors" title="Copy command" >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" ></path>
+                    </svg>
+                </button>
+                <span id="copy-curl-feedback" class="absolute top-2 right-2 p-2 text-white text-xs" style="display: none;">Copied!</span>
+                </div>
+            </div>
+
+            <!-- PowerShell Command -->
+            <div id="powershell-command-container" style="display: none;">
+                <div class="relative bg-gray-900 p-3 rounded-md rounded-tl-none">
+                <h3 class="text-md font-semibold mb-2 text-gray-300">
+                    Run this command in PowerShell:
+                </h3>
+                <code id="powershell-command" class="text-cyan-300 break-all text-xs font-mono whitespace-pre-wrap"></code>
+                <button id="copy-powershell-btn" class="absolute top-2 right-2 p-2 text-gray-400 hover:text-white transition-colors" title="Copy command" >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" ></path>
+                    </svg>
+                </button>
+                <span id="copy-powershell-feedback" class="absolute top-2 right-2 p-2 text-white text-xs" style="display: none;">Copied!</span>
+                </div>
+            </div>
+            
           </div>
         </div>
 
@@ -167,9 +203,22 @@
 
         const testSectionEl = document.getElementById("test-section");
         const serverKeyInput = document.getElementById("server-key-input");
+        
+        // Command Tabs
+        const curlTabBtn = document.getElementById('curl-tab-btn');
+        const powershellTabBtn = document.getElementById('powershell-tab-btn');
+        const curlContainer = document.getElementById('curl-command-container');
+        const powershellContainer = document.getElementById('powershell-command-container');
+
+        // cURL elements
         const curlCommandEl = document.getElementById("curl-command");
         const copyCurlBtn = document.getElementById("copy-curl-btn");
         const copyCurlFeedback = document.getElementById("copy-curl-feedback");
+        
+        // PowerShell elements
+        const powerShellCommandEl = document.getElementById("powershell-command");
+        const copyPowerShellBtn = document.getElementById("copy-powershell-btn");
+        const copyPowerShellFeedback = document.getElementById("copy-powershell-feedback");
 
         // --- FIREBASE INITIALIZATION ---
         firebase.initializeApp(firebaseConfig);
@@ -216,6 +265,33 @@
           curlCommandEl.textContent = command;
         };
 
+        const updatePowerShellCommand = () => {
+            if (!fcmToken) return;
+            const serverKey = serverKeyInput.value || "YOUR_SERVER_KEY_FROM_FIREBASE_CONSOLE";
+            const payload = {
+                to: fcmToken,
+                notification: {
+                    title: notificationTitle,
+                    body: notificationBody,
+                },
+            };
+            // Use single quotes around the -Body JSON to prevent issues with double quotes inside
+            const jsonBody = JSON.stringify(payload, null, 2);
+            const command = `Invoke-WebRequest -Uri "https://fcm.googleapis.com/fcm/send" \`
+  -Method POST \`
+  -Headers @{
+    "Authorization" = "key=${serverKey}"
+    "Content-Type"  = "application/json"
+  } \`
+  -Body '${jsonBody}'`;
+            powerShellCommandEl.textContent = command;
+        };
+        
+        const updateAllCommands = () => {
+            updateCurlCommand();
+            updatePowerShellCommand();
+        }
+
         const getFCMToken = async () => {
           try {
             if (VAPID_KEY.includes("YOUR_VAPID_KEY")) {
@@ -244,7 +320,7 @@
                 fcmToken = token;
                 tokenDisplayEl.textContent = token;
                 showSections();
-                updateCurlCommand();
+                updateAllCommands();
                 console.log("FCM Token retrieved:", token);
               } else {
                 throw new Error(
@@ -263,7 +339,7 @@
 
         // --- EVENT LISTENERS ---
         requestPermissionBtn.addEventListener("click", getFCMToken);
-        serverKeyInput.addEventListener("input", updateCurlCommand);
+        serverKeyInput.addEventListener("input", updateAllCommands);
 
         copyTokenBtn.addEventListener("click", () => {
           if (fcmToken) {
@@ -279,12 +355,12 @@
 
         titleInput.addEventListener("input", (e) => {
           notificationTitle = e.target.value;
-          updateCurlCommand();
+          updateAllCommands();
         });
 
         bodyInput.addEventListener("input", (e) => {
           notificationBody = e.target.value;
-          updateCurlCommand();
+          updateAllCommands();
         });
 
         copyCurlBtn.addEventListener("click", () => {
@@ -297,6 +373,37 @@
               copyCurlFeedback.style.display = "none";
             }, 2000);
           }
+        });
+
+        copyPowerShellBtn.addEventListener("click", () => {
+          if (powerShellCommandEl.textContent) {
+            navigator.clipboard.writeText(powerShellCommandEl.textContent);
+            copyPowerShellBtn.style.display = "none";
+            copyPowerShellFeedback.style.display = "inline";
+            setTimeout(() => {
+              copyPowerShellBtn.style.display = "inline";
+              copyPowerShellFeedback.style.display = "none";
+            }, 2000);
+          }
+        });
+
+        // Tab switching logic
+        curlTabBtn.addEventListener('click', () => {
+            curlContainer.style.display = 'block';
+            powershellContainer.style.display = 'none';
+            curlTabBtn.classList.add('tab-active');
+            curlTabBtn.classList.remove('tab-inactive');
+            powershellTabBtn.classList.add('tab-inactive');
+            powershellTabBtn.classList.remove('tab-active');
+        });
+
+        powershellTabBtn.addEventListener('click', () => {
+            curlContainer.style.display = 'none';
+            powershellContainer.style.display = 'block';
+            powershellTabBtn.classList.add('tab-active');
+            powershellTabBtn.classList.remove('tab-inactive');
+            curlTabBtn.classList.add('tab-inactive');
+            curlTabBtn.classList.remove('tab-active');
         });
 
         // Listen for foreground messages
